@@ -25,11 +25,10 @@ func TestPushOpcodes(t *testing.T) {
 
 		assert.False(t, s.stop)
 
-		v := s.pop()
-		assert.Len(t, v.Bytes(), c)
+		res := s.pop().Bytes()
+		assert.Len(t, res, c)
 
-		assert.True(t, bytes.HasPrefix(code[1:], v.Bytes()))
-
+		assert.True(t, bytes.HasPrefix(code[1:], res))
 		c++
 	}
 }

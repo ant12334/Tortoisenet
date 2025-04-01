@@ -3,8 +3,8 @@ package evm
 import (
 	"errors"
 
-	"github.com/0xPolygon/polygon-edge/chain"
-	"github.com/0xPolygon/polygon-edge/state/runtime"
+	"github.com/0xBridge/polygon-edge/chain"
+	"github.com/0xBridge/polygon-edge/state/runtime"
 )
 
 var _ runtime.Runtime = &EVM{}
@@ -35,6 +35,7 @@ func (e *EVM) Run(c *runtime.Contract, host runtime.Host, config *chain.ForksInT
 
 	contract.msg = c
 	contract.code = c.Code
+	contract.evm = e
 	contract.gas = c.Gas
 	contract.host = host
 	contract.config = config
