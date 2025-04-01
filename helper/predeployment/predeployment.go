@@ -13,8 +13,8 @@ import (
 	"github.com/0xPolygon/polygon-edge/state"
 	itrie "github.com/0xPolygon/polygon-edge/state/immutable-trie"
 	"github.com/0xPolygon/polygon-edge/state/runtime"
-	"github.com/0xPolygon/polygon-edge/state/runtime/evm"
 	"github.com/0xPolygon/polygon-edge/types"
+	"github.com/Ethernal-Tech/blade-legacy/tree/develop/state/runtime/evm"
 )
 
 // getModifiedStorageMap fetches the modified storage map for the specified address

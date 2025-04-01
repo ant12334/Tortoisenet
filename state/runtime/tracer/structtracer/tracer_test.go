@@ -11,9 +11,9 @@ import (
 
 	"github.com/0xPolygon/polygon-edge/helper/hex"
 	"github.com/0xPolygon/polygon-edge/state/runtime"
-	"github.com/0xPolygon/polygon-edge/state/runtime/evm"
 	"github.com/0xPolygon/polygon-edge/state/runtime/tracer"
 	"github.com/0xPolygon/polygon-edge/types"
+	"github.com/Ethernal-Tech/blade-legacy/tree/develop/state/runtime/evm"
 )
 
 var (
