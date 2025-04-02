@@ -4,11 +4,13 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/0xBridge/polygon-edge/chain"
-	"github.com/0xBridge/polygon-edge/state/runtime"
-	"github.com/0xBridge/polygon-edge/state/runtime/tracer"
-	"github.com/0xBridge/polygon-edge/types"
+	"github.com/0xPolygon/polygon-edge/chain"
+	"github.com/0xPolygon/polygon-edge/state/runtime"
+	"github.com/0xPolygon/polygon-edge/state/runtime/tracer"
+	"github.com/0xPolygon/polygon-edge/types"
+	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func newMockContract(value *big.Int, gas uint64, code []byte) *runtime.Contract {
@@ -26,7 +28,10 @@ func newMockContract(value *big.Int, gas uint64, code []byte) *runtime.Contract 
 // mockHost is a struct which meets the requirements of runtime.Host interface but throws panic in each methods
 // we don't test all opcodes in this test
 type mockHost struct {
-	tracer runtime.VMTracer
+	mock.Mock
+
+	tracer     runtime.VMTracer
+	accessList *runtime.AccessList
 }
 
 func (m *mockHost) AccountExists(addr types.Address) bool {
@@ -34,7 +39,9 @@ func (m *mockHost) AccountExists(addr types.Address) bool {
 }
 
 func (m *mockHost) GetStorage(addr types.Address, key types.Hash) types.Hash {
-	panic("Not implemented in tests") //nolint:gocritic
+	args := m.Called()
+
+	return args.Get(0).(types.Hash)
 }
 
 func (m *mockHost) SetState(
@@ -51,7 +58,9 @@ func (m *mockHost) SetStorage(
 	value types.Hash,
 	config *chain.ForksInTime,
 ) runtime.StorageStatus {
-	panic("Not implemented in tests") //nolint:gocritic
+	args := m.Called()
+
+	return args.Get(0).(runtime.StorageStatus)
 }
 
 func (m *mockHost) SetNonPayable(bool) {
@@ -59,35 +68,47 @@ func (m *mockHost) SetNonPayable(bool) {
 }
 
 func (m *mockHost) GetBalance(addr types.Address) *big.Int {
-	panic("Not implemented in tests") //nolint:gocritic
+	args := m.Called(addr)
+
+	return args.Get(0).(*big.Int)
 }
 
 func (m *mockHost) GetCodeSize(addr types.Address) int {
-	panic("Not implemented in tests") //nolint:gocritic
+	args := m.Called(addr)
+
+	return args.Int(0)
 }
 
 func (m *mockHost) GetCodeHash(addr types.Address) types.Hash {
-	panic("Not implemented in tests") //nolint:gocritic
+	args := m.Called(addr)
+
+	return types.StringToHash(args.String(0))
 }
 
 func (m *mockHost) GetCode(addr types.Address) []byte {
-	panic("Not implemented in tests") //nolint:gocritic
+	args := m.Called(addr)
+
+	return types.StringToBytes(args.String(0))
 }
 
 func (m *mockHost) Selfdestruct(addr types.Address, beneficiary types.Address) {
-	panic("Not implemented in tests") //nolint:gocritic
+	m.Called()
 }
 
 func (m *mockHost) GetTxContext() runtime.TxContext {
-	panic("Not implemented in tests") //nolint:gocritic
+	args := m.Called()
+
+	return args.Get(0).(runtime.TxContext)
 }
 
-func (m *mockHost) GetBlockHash(number int64) types.Hash {
-	panic("Not implemented in tests") //nolint:gocritic
+func (m *mockHost) GetBlockHash(number uint64) types.Hash {
+	args := m.Called(number)
+
+	return args.Get(0).(types.Hash)
 }
 
 func (m *mockHost) EmitLog(addr types.Address, topics []types.Hash, data []byte) {
-	panic("Not implemented in tests") //nolint:gocritic
+	m.Called()
 }
 
 func (m *mockHost) Callx(*runtime.Contract, runtime.Host) *runtime.ExecutionResult {
@@ -95,7 +116,9 @@ func (m *mockHost) Callx(*runtime.Contract, runtime.Host) *runtime.ExecutionResu
 }
 
 func (m *mockHost) Empty(addr types.Address) bool {
-	panic("Not implemented in tests") //nolint:gocritic
+	args := m.Called(addr)
+
+	return args.Bool(0)
 }
 
 func (m *mockHost) GetNonce(addr types.Address) uint64 {
@@ -112,6 +135,30 @@ func (m *mockHost) GetTracer() runtime.VMTracer {
 
 func (m *mockHost) GetRefund() uint64 {
 	panic("Not implemented in tests") //nolint:gocritic
+}
+
+func (m *mockHost) AddSlotToAccessList(addr types.Address, slot types.Hash) {
+	m.accessList.AddSlot(addr, slot)
+}
+
+func (m *mockHost) AddAddressToAccessList(addr types.Address) {
+	m.accessList.AddAddress(addr)
+}
+
+func (m *mockHost) ContainsAccessListAddress(addr types.Address) bool {
+	return m.accessList.ContainsAddress(addr)
+}
+
+func (m *mockHost) ContainsAccessListSlot(addr types.Address, slot types.Hash) (bool, bool) {
+	return m.accessList.Contains(addr, slot)
+}
+
+func (m *mockHost) DeleteAccessListAddress(addr types.Address) {
+	m.accessList.DeleteAddress(addr)
+}
+
+func (m *mockHost) DeleteAccessListSlot(addr types.Address, slot types.Hash) {
+	m.accessList.DeleteSlot(addr, slot)
 }
 
 func TestRun(t *testing.T) {
@@ -191,9 +238,11 @@ func TestRun(t *testing.T) {
 			contract := newMockContract(tt.value, tt.gas, tt.code)
 			host := &mockHost{}
 			config := tt.config
+
 			if config == nil {
 				config = &chain.ForksInTime{}
 			}
+
 			res := evm.Run(contract, host, config)
 			assert.Equal(t, tt.expected, res)
 		})
@@ -211,7 +260,7 @@ type mockTracer struct {
 
 func (m *mockTracer) CaptureState(
 	memory []byte,
-	stack []*big.Int,
+	stack []uint256.Int,
 	opCode int,
 	contractAddress types.Address,
 	sp int,
@@ -282,7 +331,7 @@ func TestRunWithTracer(t *testing.T) {
 					name: "CaptureState",
 					args: map[string]interface{}{
 						"memory":          []byte{},
-						"stack":           []*big.Int{},
+						"stack":           []uint256.Int{},
 						"opCode":          int(PUSH1),
 						"contractAddress": contractAddress,
 						"sp":              0,
@@ -305,8 +354,8 @@ func TestRunWithTracer(t *testing.T) {
 					name: "CaptureState",
 					args: map[string]interface{}{
 						"memory": []byte{},
-						"stack": []*big.Int{
-							big.NewInt(1),
+						"stack": []uint256.Int{
+							*uint256.NewInt(1),
 						},
 						"opCode":          int(0),
 						"contractAddress": contractAddress,
@@ -327,7 +376,7 @@ func TestRunWithTracer(t *testing.T) {
 					name: "CaptureState",
 					args: map[string]interface{}{
 						"memory":          []byte{},
-						"stack":           []*big.Int{},
+						"stack":           []uint256.Int{},
 						"opCode":          int(POP),
 						"contractAddress": contractAddress,
 						"sp":              0,
@@ -362,6 +411,7 @@ func TestRunWithTracer(t *testing.T) {
 			host := &mockHost{
 				tracer: tracer,
 			}
+
 			config := tt.config
 			if config == nil {
 				config = &chain.ForksInTime{}
@@ -376,7 +426,7 @@ func TestRunWithTracer(t *testing.T) {
 			state.config = config
 
 			// make sure stack, memory, and returnData are empty
-			state.stack = make([]*big.Int, 0)
+			state.stack = make([]uint256.Int, 0)
 			state.memory = make([]byte, 0)
 			state.returnData = make([]byte, 0)
 

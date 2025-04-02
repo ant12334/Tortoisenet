@@ -200,6 +200,9 @@ const (
 	// JUMPDEST corresponds to a possible jump destination
 	JUMPDEST = 0x5B
 
+	// PUSH0 pushes a 0 constant onto the stack
+	PUSH0 = 0x5F
+
 	// PUSH1 pushes a 1-byte value onto the stack
 	PUSH1 = 0x60
 
@@ -324,6 +327,7 @@ var opCodeToString = map[OpCode]string{
 	MSIZE:          "MSIZE",
 	GAS:            "GAS",
 	JUMPDEST:       "JUMPDEST",
+	PUSH0:          "PUSH0",
 	CREATE:         "CREATE",
 	CALL:           "CALL",
 	RETURN:         "RETURN",

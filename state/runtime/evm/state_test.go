@@ -3,9 +3,15 @@ package evm
 import (
 	"testing"
 
-	"github.com/0xBridge/polygon-edge/state/runtime"
+	"github.com/0xPolygon/polygon-edge/chain"
+	"github.com/0xPolygon/polygon-edge/state/runtime"
+	"github.com/holiman/uint256"
 
 	"github.com/stretchr/testify/assert"
+)
+
+const (
+	defaultInitialGas = uint64(1000)
 )
 
 type codeHelper struct {
@@ -21,12 +27,20 @@ func (c *codeHelper) push1() {
 	c.buf = append(c.buf, 0x1)
 }
 
+func (c *codeHelper) opDup() {
+	c.buf = append(c.buf, DUP16)
+}
+
 func (c *codeHelper) pop() {
 	c.buf = append(c.buf, POP)
 }
 
-func getState() (*state, func()) {
-	c := statePool.Get().(*state) //nolint:forcetypeassert
+func getState(forks *chain.ForksInTime) (*state, func()) {
+	c := statePool.Get().(*state)
+
+	c.config = forks
+	c.gas = defaultInitialGas
+	c.msg = &runtime.Contract{}
 
 	return c, func() {
 		c.reset()
@@ -35,13 +49,13 @@ func getState() (*state, func()) {
 }
 
 func TestStackTop(t *testing.T) {
-	s, closeFn := getState()
+	s, closeFn := getState(&chain.ForksInTime{})
 	defer closeFn()
 
-	s.push(one)
-	s.push(two)
+	s.push(*uint256.NewInt(1))
+	s.push(*uint256.NewInt(2))
 
-	assert.Equal(t, two, s.top())
+	assert.Equal(t, *uint256.NewInt(2), *s.top())
 	assert.Equal(t, s.stackSize(), 2)
 }
 
@@ -51,7 +65,7 @@ func TestStackOverflow(t *testing.T) {
 		code.push1()
 	}
 
-	s, closeFn := getState()
+	s, closeFn := getState(&chain.ForksInTime{})
 	defer closeFn()
 
 	s.code = code.buf
@@ -74,7 +88,7 @@ func TestStackOverflow(t *testing.T) {
 }
 
 func TestStackUnderflow(t *testing.T) {
-	s, closeFn := getState()
+	s, closeFn := getState(&chain.ForksInTime{})
 	defer closeFn()
 
 	code := codeHelper{}
@@ -106,7 +120,7 @@ func TestStackUnderflow(t *testing.T) {
 }
 
 func TestOpcodeNotFound(t *testing.T) {
-	s, closeFn := getState()
+	s, closeFn := getState(&chain.ForksInTime{})
 	defer closeFn()
 
 	s.code = []byte{0xA5}
@@ -115,4 +129,21 @@ func TestOpcodeNotFound(t *testing.T) {
 
 	_, err := s.Run()
 	assert.Equal(t, errOpCodeNotFound, err)
+}
+
+func TestErrorHandlingStopsContractExecution(t *testing.T) {
+	code := codeHelper{}
+	code.opDup()
+	code.opDup()
+
+	s, closeFn := getState(&chain.ForksInTime{})
+	defer closeFn()
+
+	s.code = code.buf
+	s.gas = 10000
+	s.host = &mockHost{}
+
+	_, err := s.Run()
+	assert.Error(t, err, "The EVM did not handle an error")
+	assert.Equal(t, s.ip, 0, "The EVM did not executingon first error.")
 }
