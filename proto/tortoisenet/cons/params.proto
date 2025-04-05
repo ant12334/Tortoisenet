@@ -1,0 +1,15 @@
+syntax = "proto3";
+package tortoisenet.cons;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/ant12334/Tortoisenet/x/cons/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "tortoisenet/x/cons/Params";
+  option (gogoproto.equal) = true;
+
+  
+}

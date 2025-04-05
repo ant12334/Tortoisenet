@@ -53,7 +53,10 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	"google.golang.org/protobuf/types/known/durationpb"
 
+	consmodulev1 "github.com/ant12334/Tortoisenet/api/tortoisenet/cons/module"
 	tortoisenetmodulev1 "github.com/ant12334/Tortoisenet/api/tortoisenet/tortoisenet/module"
+	_ "github.com/ant12334/Tortoisenet/x/cons/module" // import for side-effects
+	consmoduletypes "github.com/ant12334/Tortoisenet/x/cons/types"
 	_ "github.com/ant12334/Tortoisenet/x/tortoisenet/module" // import for side-effects
 	tortoisenetmoduletypes "github.com/ant12334/Tortoisenet/x/tortoisenet/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
@@ -94,6 +97,7 @@ var (
 		circuittypes.ModuleName,
 		// chain modules
 		tortoisenetmoduletypes.ModuleName,
+		consmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 
@@ -119,6 +123,7 @@ var (
 		ibcfeetypes.ModuleName,
 		// chain modules
 		tortoisenetmoduletypes.ModuleName,
+		consmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
 	}
 
@@ -138,6 +143,7 @@ var (
 		ibcfeetypes.ModuleName,
 		// chain modules
 		tortoisenetmoduletypes.ModuleName,
+		consmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/endBlockers
 	}
 
@@ -296,6 +302,10 @@ var (
 			{
 				Name:   tortoisenetmoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&tortoisenetmodulev1.Module{}),
+			},
+			{
+				Name:   consmoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&consmodulev1.Module{}),
 			},
 			// this line is used by starport scaffolding # stargate/app/moduleConfig
 		},

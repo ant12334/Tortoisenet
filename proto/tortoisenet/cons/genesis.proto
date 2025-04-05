@@ -1,0 +1,17 @@
+syntax = "proto3";
+package tortoisenet.cons;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "tortoisenet/cons/params.proto";
+
+option go_package = "github.com/ant12334/Tortoisenet/x/cons/types";
+
+// GenesisState defines the cons module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}

@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             (unknown)
-// source: tortoisenet/tortoisenet/tx.proto
+// source: tortoisenet/cons/tx.proto
 
-package tortoisenet
+package cons
 
 import (
 	context "context"
@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_UpdateParams_FullMethodName = "/tortoisenet.tortoisenet.Msg/UpdateParams"
+	Msg_UpdateParams_FullMethodName = "/tortoisenet.cons.Msg/UpdateParams"
 )
 
 // MsgClient is the client API for Msg service.
@@ -100,7 +100,7 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Msg_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "tortoisenet.tortoisenet.Msg",
+	ServiceName: "tortoisenet.cons.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -109,5 +109,5 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "tortoisenet/tortoisenet/tx.proto",
+	Metadata: "tortoisenet/cons/tx.proto",
 }
