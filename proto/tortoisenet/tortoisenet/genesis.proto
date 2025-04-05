@@ -1,0 +1,17 @@
+syntax = "proto3";
+package tortoisenet.tortoisenet;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "tortoisenet/tortoisenet/params.proto";
+
+option go_package = "github.com/ant12334/Tortoisenet/x/tortoisenet/types";
+
+// GenesisState defines the tortoisenet module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
