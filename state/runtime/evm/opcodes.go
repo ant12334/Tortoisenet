@@ -201,7 +201,7 @@ const (
 	JUMPDEST = 0x5B
 
 	// PUSH0 pushes a 0 constant onto the stack
-	PUSH0 = 0x5F
+	PUSH0 = 0x5f
 
 	// PUSH1 pushes a 1-byte value onto the stack
 	PUSH1 = 0x60
@@ -354,6 +354,8 @@ func opCodesToString(from, to OpCode, str string) {
 }
 
 func init() {
+	// write push0
+	opCodeToString[PUSH0] = "PUSH0"
 	// write push
 	opCodesToString(PUSH1, PUSH32, "PUSH")
 	// write dup
